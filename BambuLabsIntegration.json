@@ -1,0 +1,16 @@
+{
+  "packageName": "Bambu Labs Printers",
+  "author": "Ryan Elliott",
+  "version": "0.1.0",
+  "minimumHEVersion": "0.0",
+  "dateReleased": "2023-04-27",
+  "drivers": [
+    {
+      "id": "87c1b03a-086e-4e6c-9761-1dfb706eee01",
+      "name": "BambuLabs",
+      "namespace": "rle.bl",
+      "location": "https://friedcheese2006.gateway.scarf.sh/BambuLabs_Driver.groovy",
+      "required": true
+    }
+  ]
+}
