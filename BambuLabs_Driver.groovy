@@ -22,6 +22,7 @@ metadata {
         capability "Initialize"
         capability "Health Check"
         capability "Presence Sensor"
+        capability "Actuator"
 
         attribute "healthStatus", "ENUM", ["offline", "online","unknown"]
         attribute "bedTemperature", "NUMBER"
