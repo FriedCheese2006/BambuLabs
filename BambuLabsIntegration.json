@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "minimumHEVersion": "0.0",
   "dateReleased": "2023-04-27",
+  "releaseNotes": "v0.1.0 - Creation.\n\nFor further information or to report issues/request features, please see the community thread https://community.hubitat.com/t/release-iotawatt-beta/116875",
   "drivers": [
     {
       "id": "87c1b03a-086e-4e6c-9761-1dfb706eee01",
