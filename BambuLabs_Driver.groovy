@@ -39,6 +39,7 @@ metadata {
         attribute "printPercentComplete", "NUMBER"
         attribute "printTimeRemaining","NUMBER"
         attribute "currentPrintFile","STRING"
+        attribute "currentPrintSpeed","STRING"
 
 
         command "connect"
