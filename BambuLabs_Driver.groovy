@@ -12,7 +12,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * v0.1.0		RLE		Creation
+ * v0.1.0	RLE		Creation
+ * v0.1.1   RLE     Added actuator capability for RM.
+ * v0.1.2   RLE     Added print time left and print percent completion.
+                    Added current print file.
+                    Added rounding for fan speed %.
  *
  *
  */
@@ -32,6 +36,9 @@ metadata {
         attribute "auxFanSpeed", "NUMBER"
         attribute "chamberTemperature", "NUMBER"
         attribute "nozzleTemperature", "NUMBER"
+        attribute "printPercentComplete", "NUMBER"
+        attribute "printTimeRemaining","NUMBER"
+        attribute "currentPrintFile","STRING"
 
 
         command "connect"
@@ -259,6 +266,7 @@ def parse(String event) {
             // Extract big_fan1_speed value and send event
             def fan1Speed = json.print.big_fan1_speed as Integer
             fan1Speed = (fan1Speed*100)/15
+            fan1Speed = new BigDecimal(fan1Speed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
             sendEvent(name: 'auxFanSpeed', value: fan1Speed, unit: '%', displayed: true)
         }
 
@@ -266,6 +274,7 @@ def parse(String event) {
             // Extract big_fan2_speed value and send event
             def fan2Speed = json.print.big_fan2_speed as Integer
             fan2Speed = (fan2Speed*100)/15
+            fan2Speed = new BigDecimal(fan2Speed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
             sendEvent(name: 'chamberFanSpeed', value: fan2Speed, unit: '%', displayed: true)
         }
 
@@ -273,6 +282,7 @@ def parse(String event) {
             // Extract heatbreak_fan_speed value and send event
             def heatbreakFanSpeed = json.print.heatbreak_fan_speed as Integer
             heatbreakFanSpeed = (heatbreakFanSpeed*100)/15
+            heatbreakFanSpeed = new BigDecimal(heatbreakFanSpeed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
             sendEvent(name: 'heatbreakFanSpeed', value: heatbreakFanSpeed, unit: '%', displayed: true)
         }
 
@@ -280,8 +290,48 @@ def parse(String event) {
             // Extract cooling_fan_speed value and send event
             def coolingFanSpeed = json.print.cooling_fan_speed as Integer
             coolingFanSpeed = (coolingFanSpeed*100)/15
+            coolingFanSpeed = new BigDecimal(coolingFanSpeed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
             sendEvent(name: 'partCoolingFanSpeed', value: coolingFanSpeed, unit: '%', displayed: true)
         }
+
+        if (json.print.containsKey('mc_percent')) {
+            // Extract mc_percent value and send event
+            def printPerc = json.print.mc_percent as Integer
+            sendEvent(name: 'printPercentComplete', value: printPerc, unit: '%', displayed: true)
+        }
+
+        if (json.print.containsKey('mc_remaining_time')) {
+            // Extract mc_remaining_time value and send event
+            def timeRemaining = json.print.mc_remaining_time as Integer
+            sendEvent(name: 'printTimeRemaining', value: timeRemaining, unit: 'Minutes', displayed: true)
+        }
+
+        if (json.print.containsKey('spd_lvl')) {
+            // Extract spd_lvl value and send event
+            def currentSpeed = json.print.spd_lvl as Integer
+            switch(currentSpeed) {
+                case 1:
+                    currentPrintSpeed = Silent
+                    break;
+                case 2 :
+                    currentPrintSpeed = "Standard"
+                    break;
+                case 3:
+                    currentPrintSpeed = "Sport"
+                    break;
+                case 4:
+                    currentPrintSpeed = "Ludicrous"
+                    break;
+            }
+            sendEvent(name: 'currentPrintSpeed', value: currentPrintSpeed, displayed: true)
+        }
+
+        if (json.print.containsKey('subtask_name')) {
+            // Extract subtask_name value and send event
+            def currentPrintFile = json.print.subtask_name as String
+            sendEvent(name: 'currentPrintFile', value: currentPrintFile, displayed: true)
+        }
+
         unsubscribe()
     }
 }
