@@ -17,6 +17,7 @@
  * v0.1.2   RLE     Added print time left and print percent completion.
                     Added current print file.
                     Added rounding for fan speed %.
+ * v0.1.3   RLE     Minor tweaks
  *
  *
  */
@@ -46,7 +47,7 @@ metadata {
         command "disconnect"
         command "subscribe"
         command "unsubscribe"
-        command "reset"
+        // command "reset"
         command "barLightOn"
         command "barLightOff"
         command "logoLightOn"
@@ -68,7 +69,7 @@ preferences {
     input name: "retry", type: "bool", title: getFormat("header","Automatically retry to connect when disconnected?"), description: getFormat("important","The driver will automatically try reconnecting every 5 seconds.<br>Turn off if you power down your printer between prints."), defaultValue: true
     input name: "infoOutput", type: "bool", title: getFormat("header","Enable info logging"), defaultValue: true
     input name: "debugOutput", type: "bool", title: getFormat("header","Enable debug logging"), defaultValue: true
-    input name: "traceOutput", type: "bool", title: getFormat("header","Enable trace logging"), defaultValue: true
+    input name: "traceOutput", type: "bool", title: getFormat("header","Enable trace logging"), defaultValue: false
 }
 
 def installed() {
@@ -77,8 +78,8 @@ def installed() {
 
 def updated() {
   log.info "Updated with $settings"
-//   if (debugOutput) runIn(1800,debugLogsOff)
-//   if (traceOutput) runIn(1800,traceLogsOff)
+  if (debugOutput) runIn(1800,debugLogsOff)
+  if (traceOutput) runIn(1800,traceLogsOff)
   initialize()
 }
 
@@ -246,25 +247,21 @@ def parse(String event) {
 
     if(json.containsKey('print')) {
         if (json.print.containsKey('bed_temper')) {
-            // Extract bed_temper value and send event
             def bedTemp = json.print.bed_temper as Double
             sendEvent(name: 'bedTemperature', value: bedTemp, unit: '°C', displayed: true)
         }
 
         if (json.print.containsKey('nozzle_temper')) {
-            // Extract nozzle_temper value and send event
             def nozzleTemp = json.print.nozzle_temper as Double
             sendEvent(name: 'nozzleTemperature', value: nozzleTemp, unit: '°C', displayed: true)
         }
 
         if (json.print.containsKey('chamber_temper')) {
-            // Extract chamber_temper value and send event
             def chamberTemp = json.print.chamber_temper as Double
             sendEvent(name: 'chamberTemperature', value: chamberTemp, unit: '°C', displayed: true)
         }
 
         if (json.print.containsKey('big_fan1_speed')) {
-            // Extract big_fan1_speed value and send event
             def fan1Speed = json.print.big_fan1_speed as Integer
             fan1Speed = (fan1Speed*100)/15
             fan1Speed = new BigDecimal(fan1Speed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
@@ -272,7 +269,6 @@ def parse(String event) {
         }
 
         if (json.print.containsKey('big_fan2_speed')) {
-            // Extract big_fan2_speed value and send event
             def fan2Speed = json.print.big_fan2_speed as Integer
             fan2Speed = (fan2Speed*100)/15
             fan2Speed = new BigDecimal(fan2Speed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
@@ -280,7 +276,6 @@ def parse(String event) {
         }
 
         if (json.print.containsKey('heatbreak_fan_speed')) {
-            // Extract heatbreak_fan_speed value and send event
             def heatbreakFanSpeed = json.print.heatbreak_fan_speed as Integer
             heatbreakFanSpeed = (heatbreakFanSpeed*100)/15
             heatbreakFanSpeed = new BigDecimal(heatbreakFanSpeed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
@@ -288,7 +283,6 @@ def parse(String event) {
         }
 
         if (json.print.containsKey('cooling_fan_speed')) {
-            // Extract cooling_fan_speed value and send event
             def coolingFanSpeed = json.print.cooling_fan_speed as Integer
             coolingFanSpeed = (coolingFanSpeed*100)/15
             coolingFanSpeed = new BigDecimal(coolingFanSpeed).setScale(2,BigDecimal.ROUND_HALF_UP).toDouble()
@@ -296,19 +290,16 @@ def parse(String event) {
         }
 
         if (json.print.containsKey('mc_percent')) {
-            // Extract mc_percent value and send event
             def printPerc = json.print.mc_percent as Integer
             sendEvent(name: 'printPercentComplete', value: printPerc, unit: '%', displayed: true)
         }
 
         if (json.print.containsKey('mc_remaining_time')) {
-            // Extract mc_remaining_time value and send event
             def timeRemaining = json.print.mc_remaining_time as Integer
             sendEvent(name: 'printTimeRemaining', value: timeRemaining, unit: 'Minutes', displayed: true)
         }
 
         if (json.print.containsKey('spd_lvl')) {
-            // Extract spd_lvl value and send event
             def currentSpeed = json.print.spd_lvl as Integer
             switch(currentSpeed) {
                 case 1:
@@ -328,7 +319,6 @@ def parse(String event) {
         }
 
         if (json.print.containsKey('subtask_name')) {
-            // Extract subtask_name value and send event
             def currentPrintFile = json.print.subtask_name as String
             sendEvent(name: 'currentPrintFile', value: currentPrintFile, displayed: true)
         }
@@ -356,7 +346,6 @@ def subscribe() {
     } else {
         logDebug "Subscribing"
         interfaces.mqtt.subscribe("#")
-        // runIn(5,unsubscribe)
     }
 }
 
