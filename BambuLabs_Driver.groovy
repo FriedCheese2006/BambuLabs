@@ -18,6 +18,7 @@
                     Added current print file.
                     Added rounding for fan speed %.
  * v0.1.3   RLE     Minor tweaks
+ * v0.1.4   RLE     Added printing status attribute
  *
  *
  */
@@ -41,6 +42,7 @@ metadata {
         attribute "printTimeRemaining","NUMBER"
         attribute "currentPrintFile","STRING"
         attribute "currentPrintSpeed","STRING"
+        attribute "currentPrintingStatus","STRING"
 
 
         command "connect"
@@ -58,7 +60,7 @@ metadata {
         command "setBedTemp", [[name: 'Set the Print Bed Temperature', type: "NUMBER", description: "Enter the desired bed temp"]]
         command "setPartCoolingFanSpeed", [[name: 'Set the Part Cooling Fan Speed (0-100)', type: "NUMBER", description: "Enter the desired fan speed"]]
         command "setAuxFanSpeed", [[name: 'Set the Aux Cooling Fan Speed (0-100)', type: "NUMBER", description: "Enter the desired fan speed"]]
-        command "setChamberFanSpeed", [[name: 'Set the Chamber Cooling Fan Speed (0-100)', type: "NUMBER", description: "Enter the desired fan speed"]]
+        command "setChamberFanSpeed", [[name: 'Set the Chamber Cooling Fan Speed (0-100)', type: "NUMBER", description: "Enter the desired fan speed", constraits: [0,100]]]
         command "attributeUpdateSchedule", [[name: 'How often should attributes be updated? (Default is 30 seconds)', type: "NUMBER", description: "How often (in seconds) should the attributes be updated?"]]
     }
 }
@@ -78,8 +80,8 @@ def installed() {
 
 def updated() {
   log.info "Updated with $settings"
-  if (debugOutput) runIn(1800,debugLogsOff)
-  if (traceOutput) runIn(1800,traceLogsOff)
+//   if (debugOutput) runIn(1800,debugLogsOff)
+//   if (traceOutput) runIn(1800,traceLogsOff)
   initialize()
 }
 
@@ -235,9 +237,7 @@ def parse(String event) {
         def matcher = (message =~ regex)
         if (matcher.find()) {
             deviceId = matcher.group(1)
-            if(deviceId != state.deviceId) {
             state.deviceId = deviceId
-            }
         logTrace "Device ID: $state.deviceId"
         }
     }
@@ -303,7 +303,7 @@ def parse(String event) {
             def currentSpeed = json.print.spd_lvl as Integer
             switch(currentSpeed) {
                 case 1:
-                    currentPrintSpeed = Silent
+                    currentPrintSpeed = "Silent"
                     break;
                 case 2 :
                     currentPrintSpeed = "Standard"
@@ -321,6 +321,11 @@ def parse(String event) {
         if (json.print.containsKey('subtask_name')) {
             def currentPrintFile = json.print.subtask_name as String
             sendEvent(name: 'currentPrintFile', value: currentPrintFile, displayed: true)
+        }
+
+        if (json.print.containsKey('gcode_state')) {
+            def currentPrintingStatus = json.print.gcode_state as String
+            sendEvent(name: 'currentPrintingStatus', value: currentPrintingStatus, displayed: true)
         }
 
         unsubscribe()
